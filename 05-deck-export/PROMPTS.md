@@ -12,6 +12,14 @@ The export engine supports two independent paths. **Execute ONLY the specific pa
 * **Path A (Native PPTX Engine):** Generates `06-outputs/build_deck.py`, executes it, and verifies `06-outputs/presentation.pptx`.
 * **Path B (Marp Web Engine):** Generates `06-outputs/marp_deck.md`, executes Marp CLI, and verifies `06-outputs/presentation.html`.
 
+### Pre-Flight Consistency Validation (Path-Agnostic)
+
+* BEFORE writing any code or Marp markup (either path), cross-check the upstream artifacts for drift. STOP and report a precise diff if any check fails:
+  - `total_slides` is identical in `06-outputs/outline.md`, `06-outputs/deck-content.md`, and `06-outputs/design.md`.
+  - Every `Layout Tag` in `06-outputs/deck-content.md` is a member of the unified Archetype vocabulary (`HERO_CENTER`, `SPLIT_50_50`, `CARD_ROW_3`, `GRID_2X2`, `METRIC_HERO_ROW`, `PROCESS_TIMELINE`).
+  - Every slide has a matching Archetype mapping in `06-outputs/design.md`.
+* **Stop Rule:** Never auto-repair upstream drift from inside Phase 5. Report the drift and direct the user to the Delta propagation rules (AGENTS.md Rule 6).
+
 ---
 
 ## Path A: Native Python-pptx Engine
@@ -23,17 +31,7 @@ When Path A is invoked:
    * Read `06-outputs/deck-content.md` for Action Titles, on-slide card copy, and presenter voiceover scripts.
    * Map each slide's Archetype tag directly to standard layout renderer functions.
 
-2. **Pre-Flight Consistency Validation (Before Codegen):**
-   * BEFORE writing any code, cross-check the three upstream artifacts for drift. STOP and report a precise diff if any check fails:
-     - `total_slides` is identical in `06-outputs/outline.md`, `06-outputs/deck-content.md`, and `06-outputs/design.md`.
-     - Every `Layout Tag` in `06-outputs/deck-content.md` is a member of the unified Archetype vocabulary (`HERO_CENTER`, `SPLIT_50_50`, `CARD_ROW_3`, `GRID_2X2`, `METRIC_HERO_ROW`, `PROCESS_TIMELINE`).
-     - Every slide has a matching Archetype mapping in `06-outputs/design.md`.
-   * **Post-Build Assertion:** after `prs.save(...)`, assert the rendered slide count matches `total_slides`:
-     ```python
-     assert len(prs.slides._sldIdLst) == TOTAL_SLIDES, f"Expected {TOTAL_SLIDES}, got {len(prs.slides._sldIdLst)}"
-     ```
-
-3. **Deterministic Script Structure (`06-outputs/build_deck.py`):**
+2. **Deterministic Script Structure (`06-outputs/build_deck.py`):**
    * **Canvas Dimensions:** 16:9 widescreen (`prs.slide_width = Inches(13.333)`, `prs.slide_height = Inches(7.500)`).
    * **Blank Layout:** Use `prs.slide_layouts[6]`.
    * **Reusable Helper Functions:**
@@ -58,8 +56,12 @@ When Path A is invoked:
      - `render_metric_hero_row(slide, title, metrics_data, theme)`
      - `render_process_timeline(slide, title, steps_data, theme)`
    * **File Save:** `prs.save("06-outputs/presentation.pptx")`.
+   * **Post-Build Assertion:** after `prs.save(...)`, assert the rendered slide count matches `total_slides`:
+     ```python
+     assert len(prs.slides._sldIdLst) == TOTAL_SLIDES, f"Expected {TOTAL_SLIDES}, got {len(prs.slides._sldIdLst)}"
+     ```
 
-4. **Terminal Execution & Closed-Loop Self-Healing:**
+3. **Terminal Execution & Closed-Loop Self-Healing:**
    * Run in terminal: `python 06-outputs/build_deck.py`.
    * If `ModuleNotFoundError: No module named 'pptx'` occurs, execute `pip install python-pptx` and re-run.
    * If a pre-flight consistency check or the slide-count assertion fails, stop and report the drift instead of blindly regenerating from stale upstream artifacts.
@@ -112,6 +114,8 @@ When Path B is invoked:
      ```bash
      npx @marp-team/marp-cli@latest 06-outputs/marp_deck.md -o 06-outputs/presentation.html --allow-local-files
      ```
+   * **Post-Build Slide-Count Check:** verify the rendered HTML contains exactly `total_slides` slide blocks (e.g., `grep -c '<section' 06-outputs/presentation.html`).
+   * If any pre-flight consistency check fails, stop and report the drift instead of generating from stale upstream artifacts.
    * If syntax errors occur, adjust `marp_deck.md` and re-run until exit code is 0.
 
 ---

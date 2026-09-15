@@ -57,7 +57,7 @@ Each phase can be invoked independently, provided its upstream artifact already 
   | Phase 2 (Outline) | `06-outputs/info.md` |
   | Phase 3 (Deck-Content) | `06-outputs/outline.md` (+ `info.md` as reference) |
   | Phase 4 (Visual-Design) | `06-outputs/deck-content.md` (+ `info.md` for style context) |
-  | Phase 5 (Deck-Export) | `06-outputs/design.md` + `06-outputs/deck-content.md` |
+  | Phase 5 (Deck-Export) | `06-outputs/design.md` + `06-outputs/deck-content.md` (+ `outline.md` for pre-flight cross-check) |
 * **Missing Artifact Gate:** If a phase is invoked but its required upstream artifact does not exist, the Agent MUST STOP immediately and return a standardized error message without producing any output file:
   ```
   ⛔ Phase [N] cannot start: missing prerequisite [filename] in 06-outputs/.

@@ -12,7 +12,7 @@
 | **Phase 2: Outline** | `02-outline/PROMPTS.md` | `06-outputs/info.md` | `06-outputs/outline.md` | **结构对齐：** 确认 SCQA 叙事主线与总页数规划 |
 | **Phase 3: Content** | `03-deck-content/PROMPTS.md` | `06-outputs/outline.md` | `06-outputs/deck-content.md` | 审阅屏上文案字数密度、演讲口播稿与演说心法 |
 | **Phase 4: Design** | `04-visual-design/PROMPTS.md` | `06-outputs/deck-content.md` *(仅屏上内容)* + `info.md` *(风格参考)* | `06-outputs/design.md` | 审阅全局配色 Hex、字体层级与 Archetype 版式映射 |
-| **Phase 5: Export** | `05-deck-export/PROMPTS.md` | `06-outputs/design.md` + `deck-content.md` | `presentation.pptx` / `presentation.html` | **终端自愈闭环：** Agent 自动执行渲染，报错自动修复 |
+| **Phase 5: Export** | `05-deck-export/PROMPTS.md` | `06-outputs/design.md` + `deck-content.md`（预检时交叉核对 `outline.md`） | `presentation.pptx` / `presentation.html` | **预检 + 终端自愈闭环：** 渲染前校验三源一致性，报错自动修复 |
 
 ---
 
@@ -91,7 +91,7 @@
 ```
 
 #### Phase 5: 双路径渲染与代码自愈 (Deck-Export)
-> **前置依赖：** `06-outputs/design.md` 与 `06-outputs/deck-content.md` 均已存在
+> **前置依赖：** `06-outputs/design.md` 与 `06-outputs/deck-content.md` 均已存在（`06-outputs/outline.md` 供预检交叉核对）
 
 根据交付目标选择 Path A 或 Path B：
 
@@ -110,17 +110,26 @@
 ## 进阶工程实践
 
 ### 1. 增量微调 (Delta Update) 传播链条 (P0)
-演示文稿制作常需局部修改，**严禁跨步导致数据不一致**：
-* **仅修改文案、指标或口播词：**
+演示文稿制作常需局部修改，**严禁跨步导致数据不一致**。
+**权威源规则：** `deck-content.md` 的 Layout Tag 是页面版式的唯一权威源；`outline.md` 的 Layout Suggestion 仅为建议，`design.md` 的 Archetype 映射由 deck-content 派生。任何版式变更先改 `deck-content.md`，再向下游传播。
+* **仅修改文案、指标或口播词（Case A）：**
   直接修改 `06-outputs/deck-content.md` 对应页 → **直接重跑 Phase 5** 重新渲染。
-* **修改页面版式或结构（如从单栏改为 3 栏对比）：**
-  修改 `06-outputs/deck-content.md` 的 Layout Tag → **必须同步更新 `06-outputs/design.md` 对应页的 Archetype 映射** → **再重跑 Phase 5** 重新渲染。
-* **增删页面或重构故事线：**
+* **修改页面版式或结构（Case B）：**
+  修改 `06-outputs/deck-content.md` 的 Layout Tag → **必须同步更新 `06-outputs/design.md` 对应页的 Archetype 映射**（建议同步 `outline.md` 的 Layout Suggestion 防漂移）→ **再重跑 Phase 5** 重新渲染。
+* **增删页面或重构故事线（Case C）：**
   修改 `06-outputs/outline.md` → 按顺序重新执行 Phase 3 → Phase 4 → Phase 5。
+* **修改受众、场景、核心目标或核实事实（Case D）：**
+  修改 `06-outputs/info.md` → 按顺序重新执行 Phase 2 → Phase 3 → Phase 4 → Phase 5，**严禁基于过期 info.md 向下游打补丁**。
 
 ### 2. 单工作区与多 Deck 隔离原则
 * 当前工作区 `06-outputs/` 专注于维护**一份活跃的演示文稿**。
 * 如需制作新演示文稿，请先将 `06-outputs/` 备份归档或清空，避免新旧文稿中间产物冲突。
 
 ### 3. 自愈执行闭环 (Self-Healing Loop)
-* Agent 在 Phase 5 中具备终端执行与自动修复权限。如果本地缺少 `python-pptx` 等依赖，Agent 将自动执行安装命令并重新构建，确保交付确定性。
+* Agent 在 Phase 5 中具备终端执行与自动修复权限。渲染前先执行**三源一致性预检**（`total_slides` / Layout Tag 词表 / Archetype 映射），发现上游漂移即停并报告，而非盲目重建。
+* 如果本地缺少 `python-pptx` 等依赖，Agent 将自动执行安装命令并重新构建，确保交付确定性。
+
+### 4. 版本控制纪律 (Git)
+* 工作区为 git 仓库。Agent 在每个阶段成功完成后自动 commit 对应产物，增量修改与重跑全程可 diff、可回退。
+* `.gitignore` 已排除 `.DS_Store`、Python 缓存及全部排除目录（`_archive/`、`_samples/`、`_review/`）。
+* 排除目录由人工维护、不入版本库 —— 重要评审结论请自行备份留档。
