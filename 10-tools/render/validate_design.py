@@ -9,9 +9,11 @@ Checks:
 2. ``layout_tag_vocab`` == ``registry.json`` archetype keys (exact set).
 3. ``slide_archetypes`` maps every slide (1..total_slides) to a vocab member.
 4. Theme hex values match ``registry.json`` theme (single-source) and every
-   geometry color reference resolves to a defined theme key.
-5. ``type_scale`` named sizes match the geometry register (engine truth).
-6. P2: ``registry.archetypes[*].render_fn`` ↔ ``pptx_engine._RENDERERS`` keys.
+   geometry color reference resolves to a defined theme key or raw hex.
+5. ``fonts.pptx`` == ``registry.json`` fonts (html fonts defer to S3/B4).
+6. ``type_scale`` named sizes match the geometry register (engine truth).
+7. ``registry.archetypes`` keys == ``pptx_engine._RENDERERS`` keys, and each
+   ``render_fn`` equals its engine entry exactly (no substring pass).
 
 Exit 0 == all pass, 1 == first failure (deterministic, pre-check gate).
 """
@@ -31,6 +33,7 @@ REGISTRY_PATH_DEFAULT = HERE / "registry.json"
 ENGINE_PATH = HERE / "pptx_engine.py"
 
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.S)
+HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 BAR = 60 * "-"
 
@@ -74,25 +77,35 @@ def check_slide_map(data):
     return "slide_archetypes: {} slides all mapped within vocab".format(n)
 
 
-def collect_color_refs(reg):
-    refs, stack = [], [reg["archetypes"], reg.get("common", {}), reg["theme"]]
-    items = []
-    for sec in stack:
-        items.extend(
-            (path, v) for path, v in _walk(sec) if isinstance(v, str)
-            and v in reg["theme"])
-    return sorted(v for _, v in items)
-
-
-def _walk(node, prefix=""):
+def _color_fields(node, prefix=""):
+    """Yield ``(path, value)`` for every color-bearing field in the registry."""
     if isinstance(node, dict):
         for k, v in node.items():
-            yield from _walk(v, "{}/{}".format(prefix, k) if prefix else k)
+            path = "{}/{}".format(prefix, k) if prefix else k
+            if k == "fill" or k == "colors" or k.endswith("color"):
+                yield path, v
+            else:
+                yield from _color_fields(v, path)
     elif isinstance(node, (list, tuple)):
         for i, v in enumerate(node):
-            yield from _walk(v, "{}[{}]".format(prefix, i))
-    else:
-        yield (prefix, node)
+            yield from _color_fields(v, "{}[{}]".format(prefix, i))
+
+
+def check_color_refs(registry):
+    theme = registry["theme"]
+    fields = list(_color_fields(registry["archetypes"], "archetypes"))
+    fields += list(_color_fields(registry.get("common", {}), "common"))
+    bad, checked = [], 0
+    for path, value in fields:
+        values = value if isinstance(value, (list, tuple)) else [value]
+        for v in values:
+            if v is None:
+                continue
+            checked += 1
+            if not (isinstance(v, str) and (v in theme or HEX_RE.match(v))):
+                bad.append("{}={!r}".format(path, v))
+    assert not bad, "unresolvable color refs: {}".format(bad)
+    return "geometry color refs resolve to theme key or hex ({} checked)".format(checked)
 
 
 def check_theme_consistency(data, registry):
@@ -128,17 +141,28 @@ def check_type_scale(data, registry):
     return "type_scale named sizes match engine geometry ({} refs)".format(len(expected))
 
 
+def check_fonts(data, registry):
+    fonts = registry.get("fonts")
+    assert isinstance(fonts, dict) and fonts, "engine registry missing fonts"
+    assert data["fonts"]["pptx"] == fonts, \
+        "fonts.pptx {} != registry.fonts {}".format(data["fonts"]["pptx"], fonts)
+    return "fonts.pptx == registry.fonts ({})".format("/".join(sorted(set(fonts.values()))))
+
+
 def check_render_fn(registry):
     src = ENGINE_PATH.read_text(encoding="utf-8")
     m = re.search(r"^_RENDERERS = \{(.*?)\}", src, re.S | re.M)
     assert m, "cannot locate _RENDERERS dict in {}".format(ENGINE_PATH)
-    keys = set(re.findall(r"\"([A-Z0-9_]+)\":\s*(render_\w+)", m.group(1)))
-    engine_keys = {k: v for k, v in keys}
+    engine_map = dict(re.findall(r"\"([A-Z0-9_]+)\":\s*(render_\w+)", m.group(1)))
+    reg_names, engine_names = set(registry["archetypes"]), set(engine_map)
+    assert reg_names == engine_names, \
+        "archetypes != _RENDERERS keys: missing={} extra={}".format(
+            sorted(engine_names - reg_names), sorted(reg_names - engine_names))
     for name, info in registry["archetypes"].items():
-        assert info["render_fn"] in engine_keys.get(name, ""), \
+        assert info["render_fn"] == engine_map[name], \
             "render_fn {} != _RENDERERS[\"{}\"]={}".format(
-                info["render_fn"], name, engine_keys.get(name))
-    return "render_fn ↔ _RENDERERS keys consistent ({} archetypes)".format(len(registry["archetypes"]))
+                info["render_fn"], name, engine_map[name])
+    return "render_fn == _RENDERERS exact match ({} archetypes)".format(len(reg_names))
 
 
 def main(argv):
@@ -156,6 +180,8 @@ def main(argv):
         ("vocab", lambda: check_vocab(data, registry)),
         ("slide_map", lambda: check_slide_map(data)),
         ("theme", lambda: check_theme_consistency(data, registry)),
+        ("color_refs", lambda: check_color_refs(registry)),
+        ("fonts", lambda: check_fonts(data, registry)),
         ("type_scale", lambda: check_type_scale(data, registry)),
         ("render_fn", lambda: check_render_fn(registry)),
     ]
@@ -163,6 +189,10 @@ def main(argv):
     for name, fn in checks:
         try:
             msg = fn()
+        except jsonschema.ValidationError as e:
+            print(BAR)
+            print("FAIL [{}] {}".format(name, e.message))
+            return 1
         except AssertionError as e:
             print(BAR)
             print("FAIL [{}] {}".format(name, e))
