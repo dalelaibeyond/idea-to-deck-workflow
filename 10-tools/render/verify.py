@@ -7,8 +7,9 @@ Usage:
 
 - pptx: extracts every zip XML part and compares content hashes, ignoring
   zip entry metadata (python-pptx writes wall-clock mtimes into the archive).
-- html: compares slide count and per-`<section>` normalized text, plus the
-  theme CSS block (ignores Marp CLI version noise in the output head).
+- html: compares slide count, per-`<section>` normalized text, and ALL
+  `<style>` blocks (the first block is Marp core CSS; the theme CSS lands
+  in a later block — comparing only the first is a false-positive hole).
 
 Exit code 0 == content identical, 1 == differ.
 """
@@ -65,15 +66,15 @@ def compare_pptx(a, b):
 def compare_html(a, b):
     ta, tb = Path(a).read_text(encoding="utf-8"), Path(b).read_text(encoding="utf-8")
     sa, sb = _html_sections(ta), _html_sections(tb)
-    if sa == sb:
-        ca = STYLE_RE.search(ta)
-        cb = STYLE_RE.search(tb)
-        css_ok = (ca and cb and ca.group(1) == cb.group(1)) or (ca is None and cb is None)
-        if css_ok:
-            return True, "identical: {} sections + theme CSS".format(len(sa))
-        return False, "sections identical ({}), but theme CSS differs".format(len(sa))
+    styles_a, styles_b = STYLE_RE.findall(ta), STYLE_RE.findall(tb)
+    if sa == sb and styles_a == styles_b:
+        return True, "identical: {} sections + {} style blocks".format(len(sa), len(styles_a))
     if len(sa) != len(sb):
         return False, "slide count differs: A={} B={}".format(len(sa), len(sb))
+    if styles_a != styles_b:
+        diff = [i for i, (x, y) in enumerate(zip(styles_a, styles_b)) if x != y]
+        return False, "style blocks differ: A has {} blocks, B has {}, mismatch at index {}".format(
+            len(styles_a), len(styles_b), diff)
     for i, (x, y) in enumerate(zip(sa, sb), 1):
         if x != y:
             return False, "section {} differs:\n  A: {}\n  B: {}".format(i, x[:120], y[:120])
