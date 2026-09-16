@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://idea-to-deck.local/schema/design.schema.json",
+  "title": "design.md frontmatter (A2 doubled-layer machine block)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "total_slides",
+    "theme_name",
+    "aspect_ratio",
+    "canvas_background",
+    "primary_brand",
+    "secondary_brand",
+    "accent_metric",
+    "surface_card",
+    "text_primary",
+    "text_muted",
+    "fonts",
+    "type_scale",
+    "layout_tag_vocab",
+    "slide_archetypes"
+  ],
+  "properties": {
+    "total_slides": { "type": "integer", "minimum": 1 },
+    "theme_name": { "type": "string" },
+    "aspect_ratio": { "type": "string" },
+    "canvas_background": { "$ref": "#/definitions/hex" },
+    "primary_brand": { "$ref": "#/definitions/hex" },
+    "secondary_brand": { "$ref": "#/definitions/hex" },
+    "accent_metric": { "$ref": "#/definitions/hex" },
+    "surface_card": { "$ref": "#/definitions/hex" },
+    "text_primary": { "$ref": "#/definitions/hex" },
+    "text_muted": { "$ref": "#/definitions/hex" },
+    "fonts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pptx", "html"],
+      "properties": {
+        "pptx": { "$ref": "#/definitions/font_pair" },
+        "html": { "$ref": "#/definitions/font_pair" }
+      }
+    },
+    "type_scale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_title",
+        "hero_cover_title",
+        "hero_cover_subtitle",
+        "card_header",
+        "grid_quadrant_header",
+        "hero_metric",
+        "body_bullets_min",
+        "body_bullets_max",
+        "meta_text"
+      ],
+      "properties": {
+        "action_title": { "$ref": "#/definitions/point" },
+        "hero_cover_title": { "$ref": "#/definitions/point" },
+        "hero_cover_subtitle": { "$ref": "#/definitions/point" },
+        "card_header": { "$ref": "#/definitions/point" },
+        "grid_quadrant_header": { "$ref": "#/definitions/point" },
+        "hero_metric": { "$ref": "#/definitions/point" },
+        "body_bullets_min": { "$ref": "#/definitions/point" },
+        "body_bullets_max": { "$ref": "#/definitions/point" },
+        "meta_text": { "$ref": "#/definitions/point" }
+      }
+    },
+    "layout_tag_vocab": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/archetype_name" }
+    },
+    "slide_archetypes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[0-9]+$" },
+      "additionalProperties": { "$ref": "#/definitions/archetype_name" }
+    }
+  },
+  "definitions": {
+    "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+    "point": { "type": "number", "minimum": 1, "maximum": 200 },
+    "font_pair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["header", "body"],
+      "properties": {
+        "header": { "type": "string", "minLength": 1 },
+        "body": { "type": "string", "minLength": 1 }
+      }
+    },
+    "archetype_name": {
+      "type": "string",
+      "enum": [
+        "HERO_CENTER",
+        "SPLIT_50_50",
+        "METRIC_HERO_ROW",
+        "CARD_ROW_3",
+        "GRID_2X2",
+        "PROCESS_TIMELINE"
+      ]
+    }
+  }
+}

@@ -6,11 +6,11 @@
     "canvas": { "width": 13.333, "height": 7.5 }
   },
   "theme": {
-    "canvas_bg": "#FFFFFF",
-    "primary": "#0F172A",
-    "secondary": "#2563EB",
-    "accent": "#0D9488",
-    "surface": "#F8FAFC",
+    "canvas_background": "#FFFFFF",
+    "primary_brand": "#0F172A",
+    "secondary_brand": "#2563EB",
+    "accent_metric": "#0D9488",
+    "surface_card": "#F8FAFC",
     "text_primary": "#1E293B",
     "text_muted": "#64748B"
   },
@@ -19,20 +19,20 @@
     "HERO_CENTER": {
       "render_fn": "render_hero_center",
       "geometry": {
-        "kicker": { "box": [1.0, 0.7, 11.3, 0.5], "size": 12, "color": "accent", "bold": true, "align": "left", "anchor": "top" },
+        "kicker": { "box": [1.0, 0.7, 11.3, 0.5], "size": 12, "color": "accent_metric", "bold": true, "align": "left", "anchor": "top" },
         "title_box": { "box": [1.5, 2.5, 10.3, 1.6], "size": 36, "color": "#FFFFFF", "bold": true, "align": "center", "anchor": "middle" },
-        "subtitle_box": { "box": [1.5, 4.6, 10.3, 0.9], "size": 18, "color": "secondary", "bold": false, "align": "center", "anchor": "top" },
+        "subtitle_box": { "box": [1.5, 4.6, 10.3, 0.9], "size": 18, "color": "secondary_brand", "bold": false, "align": "center", "anchor": "top" },
         "takeaway_box": { "box": [1.5, 5.5, 10.3, 1.0], "size": 14, "color": "text_muted", "bold": false, "align": "center", "anchor": "top" },
         "meta_box": { "box": [1.5, 6.7, 10.3, 0.5], "size": 11, "color": "text_muted", "bold": false, "align": "center", "anchor": "top" },
-        "banner_rect": { "box": [0, 0, 13.333, 2.6], "fill": "primary" },
-        "divider_rect": { "box": [4.67, 6.6, 4.0, 0.02], "fill": "secondary" }
+        "banner_rect": { "box": [0, 0, 13.333, 2.6], "fill": "primary_brand" },
+        "divider_rect": { "box": [4.67, 6.6, 4.0, 0.02], "fill": "secondary_brand" }
       }
     },
     "SPLIT_50_50": {
       "render_fn": "render_split_50_50",
       "geometry": {
-        "left_rect": { "box": [0.8, 2.0, 5.5, 4.6], "fill": "surface" },
-        "left_anchor_box": { "box": [1.1, 2.6, 4.9, 3.8], "size": 20, "color": "primary", "bold": true, "anchor": "middle", "line_spacing": 1.2 },
+        "left_rect": { "box": [0.8, 2.0, 5.5, 4.6], "fill": "surface_card" },
+        "left_anchor_box": { "box": [1.1, 2.6, 4.9, 3.8], "size": 20, "color": "primary_brand", "bold": true, "anchor": "middle", "line_spacing": 1.2 },
         "right_bullets_box": { "box": [6.8, 2.2, 5.7, 4.4] }
       }
     },
@@ -40,9 +40,9 @@
       "render_fn": "render_metric_hero_row",
       "geometry": {
         "card_lefts": [0.8, 4.8, 8.8],
-        "card_rect": { "top": 2.2, "dims": [3.6, 4.4], "fill": "surface" },
-        "number_box": { "offset": [0.2, 2.5], "size_dims": [3.2, 1.8], "size": 40, "color": "accent", "bold": true, "anchor": "middle" },
-        "label_box": { "offset": [0.2, 4.4], "size_dims": [3.2, 0.8], "size": 15, "color": "primary", "bold": true },
+        "card_rect": { "top": 2.2, "dims": [3.6, 4.4], "fill": "surface_card" },
+        "number_box": { "offset": [0.2, 2.5], "size_dims": [3.2, 1.8], "size": 40, "color": "accent_metric", "bold": true, "anchor": "middle" },
+        "label_box": { "offset": [0.2, 4.4], "size_dims": [3.2, 0.8], "size": 15, "color": "primary_brand", "bold": true },
         "context_box": { "offset": [0.2, 5.0], "size_dims": [3.2, 1.4], "size": 11, "color": "text_muted", "line_spacing": 1.25 }
       }
     },
@@ -51,9 +51,9 @@
       "geometry": {
         "card_lefts": [0.8, 4.8, 8.8],
         "cards": {
-          "card_rect": { "top": 2.0, "dims": [3.6, 4.7], "fill": "surface" },
-          "top_strip": { "height": 0.1, "colors": [null, "secondary", null] },
-          "header_box": { "offset": [0.2, 2.3], "size_dims": [3.2, 0.7], "size": 16, "color": "primary", "bold": true },
+          "card_rect": { "top": 2.0, "dims": [3.6, 4.7], "fill": "surface_card" },
+          "top_strip": { "height": 0.1, "colors": [null, "secondary_brand", null] },
+          "header_box": { "offset": [0.2, 2.3], "size_dims": [3.2, 0.7], "size": 16, "color": "primary_brand", "bold": true },
           "bullets_box": { "offset": [0.2, 3.1], "size_dims": [3.2, 3.4], "size": 12, "bold_lead": false }
         }
       }
@@ -62,12 +62,12 @@
       "render_fn": "render_grid_2x2",
       "geometry": {
         "quad_positions": [
-          { "left": 0.8, "top": 1.9, "header_color": "primary" },
-          { "left": 6.8, "top": 1.9, "header_color": "primary" },
-          { "left": 0.8, "top": 4.3, "header_color": "primary" },
-          { "left": 6.8, "top": 4.3, "header_color": "accent" }
+          { "left": 0.8, "top": 1.9, "header_color": "primary_brand" },
+          { "left": 6.8, "top": 1.9, "header_color": "primary_brand" },
+          { "left": 0.8, "top": 4.3, "header_color": "primary_brand" },
+          { "left": 6.8, "top": 4.3, "header_color": "accent_metric" }
         ],
-        "quad_rect": { "dims": [5.6, 2.3], "fill": "surface" },
+        "quad_rect": { "dims": [5.6, 2.3], "fill": "surface_card" },
         "title_box": { "offset": [0.25, 0.15], "size_dims": [5.1, 0.55], "size": 15, "bold": true },
         "bullets_box": { "offset": [0.25, 0.75], "size_dims": [5.1, 1.45], "size": 12, "bold_lead": false, "line_spacing": 1.2 }
       }
@@ -78,18 +78,18 @@
         "start_left": 0.8,
         "gap": 0.4,
         "track_width": 11.73,
-        "card_rect": { "top": 2.8, "height": 3.5, "fill": "surface" },
-        "header_box": { "x_off": 0.2, "y": 3.0, "height": 0.7, "size": 14, "color": "primary", "bold": true },
+        "card_rect": { "top": 2.8, "height": 3.5, "fill": "surface_card" },
+        "header_box": { "x_off": 0.2, "y": 3.0, "height": 0.7, "size": 14, "color": "primary_brand", "bold": true },
         "summary_box": { "x_off": 0.2, "y": 3.9, "height": 2.2, "size": 12, "color": "text_primary" }
       }
     }
   },
   "common": {
     "slide_header": {
-      "top_rect": { "box": [0, 0, 13.333, 0.08], "fill": "primary" },
-      "title_box": { "box": [0.8, 0.6, 11.7, 0.9], "size": 24, "color": "primary", "bold": true }
+      "top_rect": { "box": [0, 0, 13.333, 0.08], "fill": "primary_brand" },
+      "title_box": { "box": [0.8, 0.6, 11.7, 0.9], "size": 24, "color": "primary_brand", "bold": true }
     },
-    "accent_strip": { "box": [0, 7.3, 13.333, 0.16], "fill": "accent" },
+    "accent_strip": { "box": [0, 7.3, 13.333, 0.16], "fill": "accent_metric" },
     "text_frame": {
       "margin_left": 0.1,
       "margin_right": 0.1,
