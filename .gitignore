@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 .venv/
+.pytest_cache/
 
 # Pipeline-blind directories (human-maintained, never committed)
 _archive/
@@ -10,3 +11,6 @@ _samples/
 
 # Session transcripts (never committed)
 session-*.md
+
+# Verification aids (regenerated on each build)
+06-outputs/thumbnails*.jpg

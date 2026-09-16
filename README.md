@@ -12,7 +12,7 @@
 | **Phase 2: Outline** | `02-outline/PROMPTS.md` | `06-outputs/info.md` | `06-outputs/outline.md` | **结构对齐：** 确认 SCQA 叙事主线与总页数规划 |
 | **Phase 3: Content** | `03-deck-content/PROMPTS.md` | `06-outputs/outline.md` | `06-outputs/deck-content.md` | 审阅屏上文案字数密度、演讲口播稿与演说心法 |
 | **Phase 4: Design** | `04-visual-design/PROMPTS.md` | `06-outputs/deck-content.md` *(仅屏上内容)* + `info.md` *(风格参考)* | `06-outputs/design.md` | 审阅全局配色 Hex、字体层级与 Archetype 版式映射 |
-| **Phase 5: Export** | `05-deck-export/PROMPTS.md` | `06-outputs/design.md` + `deck-content.md`（预检时交叉核对 `outline.md`） | `presentation.pptx` / `presentation.html` | **预检 + 终端自愈闭环：** 渲染前校验三源一致性，报错自动修复 |
+| **Phase 5: Export** | `05-deck-export/PROMPTS.md` | `06-outputs/design.md` + `deck-content.md`（预检时交叉核对 `outline.md`） | `presentation.pptx` / `presentation.html` / `presentation-html2pptx.pptx`（按需） | **预检 + 终端自愈闭环：** 渲染前校验三源一致性，报错自动修复 |
 
 ---
 
@@ -34,15 +34,18 @@
 ├── 04-visual-design/
 │   └── PROMPTS.md                  # Phase 4: 全局视觉规范、Archetype 注册表与页面映射
 ├── 05-deck-export/
-│   └── PROMPTS.md                  # Phase 5: 双路径代码生成（Python-pptx 原生 & Marp HTML）
+│   └── PROMPTS.md                  # Phase 5: 多引擎代码生成（Python-pptx 原生 / Marp HTML / html2pptx 按需）
 └── 06-outputs/                     # 运行时输出目录（保存所有中间 Markdown 与终态渲染文件）
     ├── info.md                     # Phase 1 交付物：已核实事实、假设与受众/目标元数据
     ├── outline.md                  # Phase 2 交付物：SCQA 故事线与逐页 Action Title
     ├── deck-content.md             # Phase 3 交付物：版式标签、屏上文案与演讲口播稿
     ├── design.md                   # Phase 4 交付物：配色 Hex、字体与 Archetype 映射表
-    ├── build_deck.py              # Phase 5A: Python-pptx 原生渲染脚本
+    ├── build_deck.py              # Phase 5A: Python-pptx 原生渲染脚本（默认引擎）
+    ├── build_deck_html2pptx.js    # Phase 5C: html2pptx 按需引擎脚本
     ├── marp_deck.md               # Phase 5B: Marp 幻灯片源码
+    ├── slides/                    # Phase 5C: html2pptx 逐页 HTML 源文件
     ├── presentation.pptx          # 最终交付物：Office 原生可编辑 PPTX（内含口播备注）
+    ├── presentation-html2pptx.pptx # 最终交付物：html2pptx 高保真 PPTX（按需生成）
     └── presentation.html          # 最终交付物：现代化 Web 互动幻灯片
 ```
 
@@ -104,6 +107,17 @@
   ```text
   请读取 06-outputs/design.md 与 06-outputs/deck-content.md，执行 05-deck-export/PROMPTS.md 中的 Path B 规范。
   ```
+
+### Phase 5 三输出命名约定
+
+| 输出文件 | 引擎 | 源码 | 生成策略 |
+| :--- | :--- | :--- | :--- |
+| `presentation.pptx` | python-pptx（默认） | `build_deck.py` | 每次 Phase 5 默认重建 |
+| `presentation.html` | Marp CLI | `marp_deck.md` | 每次 Phase 5 始终生成 |
+| `presentation-html2pptx.pptx` | html2pptx（按需） | `build_deck_html2pptx.js` + `slides/slideXX.html` | 仅用户显式要求时重建，不默认触发 |
+
+* **命名规则：** 引擎名以连字符拼接到 `presentation-` 之后；默认引擎（python-pptx）不携带后缀。
+* **同步策略：** 默认 Phase 5 重跑只重建 python-pptx 与 Marp 两条路径；html2pptx 版在 Delta 修改后不自动同步，仅在显式要求时重跑。
 
 ---
 

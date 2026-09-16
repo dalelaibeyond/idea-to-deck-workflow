@@ -7,10 +7,11 @@ You are an expert Automation & Code Generation Engineer specializing in presenta
 
 ## Core Execution Architecture
 
-The export engine supports two independent paths. **Execute ONLY the specific path requested by the user** (defaulting to Path A if unspecified):
+The export engine supports two independent paths (plus an optional third). **Execute ONLY the specific path requested by the user** (defaulting to Path A if unspecified; Path C is on-demand only):
 
 * **Path A (Native PPTX Engine):** Generates `06-outputs/build_deck.py`, executes it, and verifies `06-outputs/presentation.pptx`.
 * **Path B (Marp Web Engine):** Generates `06-outputs/marp_deck.md`, executes Marp CLI, and verifies `06-outputs/presentation.html`.
+* **Path C (html2pptx, on-demand):** Uses `06-outputs/build_deck_html2pptx.js` + `slides/` to produce `06-outputs/presentation-html2pptx.pptx`。仅在用户显式要求时执行（见文末「可选引擎：html2pptx」章节）。
 
 ### Pre-Flight Consistency Validation (Path-Agnostic)
 
@@ -126,3 +127,27 @@ When Path B is invoked:
 3. Execute the build command in the terminal.
 4. Auto-install dependencies if missing and repair any code issues until the target presentation file is successfully created.
 * **Output Hygiene Rule:** Write ONLY raw executable code or clean Marp markdown. NEVER wrap Python scripts inside markdown code fences (` ```python `) on disk.
+
+---
+
+## 可选引擎：html2pptx（按需重建，非默认路径）
+
+`html2pptx` 利用 Playwright 渲染 HTML/CSS 并通过 `pptxgenjs` 内嵌定位信息生成 PPTX。设计精度高，适合需要像素级还原 HTML 设计的场景。
+
+### 触发与输出
+
+* **默认不触发**，仅在用户明确要求时执行此路径。
+* 源码：`06-outputs/build_deck_html2pptx.js` + `06-outputs/slides/slideXX.html`。
+* 输出文件：`06-outputs/presentation-html2pptx.pptx`（与默认 `presentation.pptx` 并存，连字符命名区分）。
+* 口播备注：JS 引擎在 `html2pptx` 返回的 slide 对象上通过 `pptxgenjs addNotes()` 注入（语言标签使用 `【口播文稿】`）。
+
+### 执行命令
+
+```bash
+NODE_PATH=/opt/homebrew/lib/node_modules node 06-outputs/build_deck_html2pptx.js
+```
+
+### 同步策略
+
+* Delta 修改后**不自动重建** html2pptx 版；仅在用户显式要求时重跑此引擎，保持与默认 python-pptx 路径的同步由人工控制。
+* 始终维护的默认引擎：`build_deck.py`（python-pptx）→ `presentation.pptx`；始终维护的 HTML：`marp_deck.md` → `presentation.html`。
